@@ -1,2 +1,2 @@
 # Farm-Security-System
-It's an Arduino hardware project for farm security.  
+This is an Arduino hardware project for farm security.  
