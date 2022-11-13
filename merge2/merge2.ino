@@ -1,6 +1,10 @@
 #include <SoftwareSerial.h>
 #include <DS3231.h>
+#include <SD.h>  
+#include <TMRpcm.h>                  
+#include <SPI.h>
 #include <stdio.h>
+
 #define ON 1
 #define OFF 0
 
@@ -12,6 +16,10 @@
 
 #define RX 10                   // Connect to the TX pin of the HC-12
 #define TX 11                   // Connect to the RX pin of the HC-12
+
+#define SD_ChipSelectPin 53     // example uses hardware SS pin 53 on Mega2560
+//#define SD_ChipSelectPin 10   // using digital pin 10 on arduino uno 328, can use other pins
+#define SD_SpeakerPin 46        // previously was 9 for uno
 
 #define call_owner  "ATD+ +8801857715545;"            // put owner phone number
 #define sms_owner "AT+CMGS=\"+8801857715545\"\r"
@@ -27,6 +35,8 @@ String present_time = "";       // RTC variables
 
 int present_condition = 0;      // vibration variables
 int previous_condition = 0;
+
+TMRpcm tmrpcm;                  // needed for sd card module 
 
 
 void setup(){
@@ -49,6 +59,15 @@ void setup(){
   //vibration setup
   pinMode(vibration_Sensor, INPUT);
   pinMode(LED, OUTPUT);
+
+  //sd card setup
+  tmrpcm.speakerPin = SD_SpeakerPin;   //5,6,11 or 46 on Mega, 9 on Uno, Nano, etc
+  if(!SD.begin(SD_ChipSelectPin)){
+    Serial.println("SD fail");
+    return;
+  }
+  //tmrpcm.setVolume(6);
+  //tmrpcm.play("song.wav");
 }
 
 void led_blink(void);
@@ -57,6 +76,7 @@ void laserCheck();
 void rtcUpdate();
 void timeCheck();
 void hc12_Signal();
+void playAudio();
 
 void loop(){
   
@@ -105,6 +125,7 @@ void vibrationCheck(){
     if (previous_condition != present_condition) {
       mySerial.write("VIBRATION DETECTED");         // sending alert signal to receiving hc12
       Makecall();                                   // calling owner to alert
+      playAudio();                                  // playing audio from sd card (code may be updated later)
       led_blink();
     }else{
       digitalWrite(LED, OFF);
@@ -123,6 +144,7 @@ void laserCheck(){
     Serial.println("No laser");
     mySerial.write("LASER COMPROMISED");    // sending alert signal to receiving hc12
     Makecall();                             // calling owner to alert
+    playAudio();                            // playing audio from sd card (code may be updated later)
   }
   delay(200);
 }
@@ -136,6 +158,12 @@ void hc12_Signal(){
   if (Serial.available()) {
     mySerial.write(Serial.read());
   }
+}
+
+// play sd card audio 
+void playAudio(){
+  tmrpcm.setVolume(6);
+  tmrpcm.play("song.wav");
 }
 
 // LED Blinking code that blinks 2 times in 1 second.
