@@ -12,7 +12,7 @@
 #define ACTION 8                // pin 8 for action to do someting
 
 #define vibration_Sensor 6
-#define LED 7
+#define LED 13
 
 #define RX 10                   // Connect to the TX pin of the HC-12
 #define TX 11                   // Connect to the RX pin of the HC-12
@@ -40,12 +40,10 @@ TMRpcm tmrpcm;                  // needed for sd card module
 
 
 void setup(){
-  pinMode(51,OUTPUT);
-  digitalWrite(51, HIGH);
-  //Serial.println("inside setup");
+  Serial.begin(9600);           // initially was 115200
+  mySerial.begin(115200);       // initializing software serial as well
   SIM900A.begin(9600);          // GSM Module Baud rate – communication speed
-  Serial.begin(9600);           // initially was 115200 
-  mySerial.begin(9600);       // initializing software serial as well
+
   
   //laser setup
   pinMode(DETECT, INPUT);       //define detect input pin
@@ -55,23 +53,21 @@ void setup(){
   rtc.begin();
   // The following lines can be uncommented to set the date and time
   rtc.setDOW(TUESDAY);          // Set Day-of-Week to SUNDAY
-  rtc.setTime(6, 57, 0);       // Set the time to 12:00:00 (24hr format)
+  rtc.setTime(10, 25, 0);       // Set the time to 12:00:00 (24hr format)
   rtc.setDate(11, 3, 2022);     // Set the date to January 1st, 2014
 
   //vibration setup
   pinMode(vibration_Sensor, INPUT);
   pinMode(LED, OUTPUT);
 
-  //sd card setup
+  // sd card setup
   tmrpcm.speakerPin = SD_SpeakerPin;   //5,6,11 or 46 on Mega, 9 on Uno, Nano, etc
-//  if(!SD.begin(SD_ChipSelectPin)){
-//    Serial.println("SD fail");
-//    return;
-//  }
-  //tmrpcm.setVolume(6);
-  //tmrpcm.play("song.wav");
-
-  //Serial.println("done setting up");
+  if(!SD.begin(SD_ChipSelectPin)){
+    Serial.println("SD fail");
+    return;
+  }
+  tmrpcm.setVolume(6);
+  tmrpcm.play("song.wav");
 }
 
 void led_blink(void);
@@ -83,17 +79,13 @@ void hc12_Signal();
 void playAudio();
 
 void loop(){
-  //Serial.println("inside loop");
+  Serial.println("inside loop");
   rtcUpdate();        // update from RTC
-  timeCheck();        // checking the time for sensor validity 
+//  timeCheck();        // checking the time for sensor validity 
   vibrationCheck();   // checking if vibration detected
-  //laserCheck();       // checking if laser interference is interfered
-  hc12_Signal();      // sending signal to the receiving hc12
+//  laserCheck();       // checking if laser interference is interfered
+//  hc12_Signal();      // sending signal to the receiving hc12
   
-  
-  if (SIM900A.available()>0)
-    Serial.write(SIM900A.read());
-
   // Wait one second before repeating loop :)
   delay (1000);       // this delay needed for rtc
 }
@@ -115,20 +107,12 @@ void rtcUpdate(){     // serial prints wont be needed afterwards. maybe discarde
 
 void timeCheck(){
   //checking if it is 7 A.M.
-  if((present_time[0] == '0' && present_time[1] == '7' && present_time[2] == ':') || (present_time[0] == '7' && present_time[1] == ':')){
+  if((present_time[0] == '0' && present_time[1] == '7' && present_time[2] == ':') || (present_time[0] == '7' && present_time[1] == ':'))
     sensorValidity = false;
-    digitalWrite(51, LOW);
-    Serial.println("its 7 am. turning sensors OFF");
-  }
-    
     
   //checking if it is 7 P.M.
-  if((present_time[0] == '1' && present_time[1] == '9' && present_time[2] == ':')){
+  if((present_time[0] == '1' && present_time[1] == '9' && present_time[2] == ':'))
     sensorValidity = true;
-    digitalWrite(51, HIGH);
-    Serial.println("its 7 pm. turning sensors ON");
-  }
-    
 }
 
 
@@ -139,10 +123,10 @@ void vibrationCheck(){
     previous_condition = present_condition;
     present_condition = digitalRead(A5);            // Reading digital data from the A5 Pin of the Arduino.
     if (previous_condition != present_condition) {
-      mySerial.write("VIBRATION DETECTED");         // sending alert signal to receiving hc12
+      //mySerial.write("VIBRATION DETECTED");         // sending alert signal to receiving hc12
       Serial.println("VIBRATION DETECTED");
-      Makecall();                                   // calling owner to alert
-      //playAudio();                                  // playing audio from sd card (code may be updated later)
+//      Makecall();                                   // calling owner to alert
+//      playAudio();                                  // playing audio from sd card (code may be updated later)
       led_blink();
     }else{
       //Serial.println("VIBRATION not DETECTED");
@@ -224,12 +208,12 @@ void RecieveMessage(){
 }
 
 void Makecall(){
-  Serial.println ("Calling owner");
+  Serial.println ("Makeing calling");
   delay (1000);
   //SIM900A.println("ATD+ +8801857715545;");
   SIM900A.println(call_owner);
-  Serial.write ("call made");
-  delay(2000);
+  Serial.write ("making call");
+  delay(5000);
   //Serial.write ("hanging up call");
   //SIM900A.println("ATH");                           // For call hang up
 

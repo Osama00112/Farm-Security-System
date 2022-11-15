@@ -14,8 +14,8 @@
 //#define TX 11                   //Connect to the RX pin of the HC-12
 
 //#define SD_ChipSelectPin 53     // example uses hardware SS pin 53 on Mega2560
-#define SD_ChipSelectPin 10       // using digital pin 10 on arduino uno 328, can use other pins
-#define SD_SpeakerPin 9        
+//#define SD_ChipSelectPin 10       // using digital pin 10 on arduino uno 328, can use other pins
+//#define SD_SpeakerPin 9        
 
 SoftwareSerial mySerial(RX, TX);
 TMRpcm tmrpcm;                    // needed for sd card module 
@@ -26,17 +26,17 @@ void setup() {
   mySerial.begin(9600);
 
   //sd card setup
-  tmrpcm.speakerPin = SD_SpeakerPin;   //5,6,11 or 46 on Mega, 9 on Uno, Nano, etc
-  if(!SD.begin(SD_ChipSelectPin)){
-    Serial.println("SD fail");
-    return;
-  }
+  //tmrpcm.speakerPin = SD_SpeakerPin;   //5,6,11 or 46 on Mega, 9 on Uno, Nano, etc
+//  if(!SD.begin(SD_ChipSelectPin)){
+//    Serial.println("SD fail");
+//    return;
+//  }
   //tmrpcm.setVolume(6);
   //tmrpcm.play("song.wav");
 
 }
 
-void playAudio();
+//void playAudio();
 
 
 void loop() { // run over and over
@@ -48,8 +48,8 @@ void loop() { // run over and over
   }
 }
 
-// play sd card audio 
-void playAudio(){
-  tmrpcm.setVolume(6);
-  tmrpcm.play("song.wav");
-}
+//// play sd card audio 
+//void playAudio(){
+//  tmrpcm.setVolume(6);
+//  tmrpcm.play("song.wav");
+//}

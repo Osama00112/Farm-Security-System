@@ -1,6 +1,6 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial SIM900A(7,8);
+SoftwareSerial SIM900A(12,13);
 
 void setup()
 {
