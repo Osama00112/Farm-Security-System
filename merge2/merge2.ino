@@ -229,7 +229,7 @@ void Makecall(){
   //SIM900A.println("ATD+ +8801857715545;");
   SIM900A.println(call_owner);
   Serial.write ("call made");
-  delay(2000);
+  delay(5000);
   //Serial.write ("hanging up call");
   //SIM900A.println("ATH");                           // For call hang up
 

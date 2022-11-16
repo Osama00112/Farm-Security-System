@@ -51,47 +51,10 @@ void updateSerial()
   while (Serial.available()) 
   {
     mySerial.write(Serial.read());    //Forward what Serial received to Software Serial Port
-//    char c = Serial.read();
-//    mySerial.write(c);
-//    found += c;
-//    if(found == "OK")
-//      mySerial.write("clip found\n");
-//    mySerial.write("\n string found: ");
-//    //mySerial.write(found);
-    
   }
   
   while(mySerial.available()) 
   {   
     Serial.write(mySerial.read());//Forward what Software Serial received to Serial Port
-//    String osama = mySerial.readString();
-//    Serial.print("printing string: ");
-//    Serial.println(osama);
-//    char c = mySerial.read();
-//    Serial.write(c);
-//    found += c;
-//    if(c == '8' && check == true){
-//      
-//      numCheck = true;
-//      Serial.println("plus found");
-//    }
-//    if(numCheck){
-//      prev += c;
-//    }
-//    if(prev == "88"){
-//      Serial.println("clip found");
-//    }
-    
-      
-//    Serial.print("\n string found: ");
-//    Serial.println(found);
-  
-//  if(check && c == "+"){
-//    Serial.write("plus found");
-//  }
-//    
   }
-  //Serial.println(prev);
-  //prev = found;
-  //Serial.println("found : " + found);
 }
