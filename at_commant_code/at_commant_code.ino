@@ -7,6 +7,8 @@ String prev = "";
 String osama;
 bool check = false;
 bool numCheck = false;
+bool foundStatus = false;
+
 void setup()
 {
   //Begin serial communication with Arduino and Arduino IDE (Serial Monitor)
@@ -36,11 +38,23 @@ void loop()
   //updateSerial();
   if (mySerial.available()>0){
     osama = mySerial.readString();
+    Serial.println("available");
   }
+//  else
+//    foundStatus = false;
 
- if(osama.indexOf("+88018577155") > -1){
+ if(/*foundStatus == false &&*/ (osama.indexOf("88018577155") > -1   || osama.indexOf("8801765014450") > -1)){
     Serial.println("FOUNDDDD");
+    foundStatus = true;
+    
+    osama = "";
   }
+//  else if (foundStatus == true && !(osama.indexOf("88018577155") > -1   || osama.indexOf("8801765014450") > -1)){
+//    foundStatus = false;
+//  }
+
+
+  //Makecall();
 }
 
 void updateSerial()
@@ -51,10 +65,68 @@ void updateSerial()
   while (Serial.available()) 
   {
     mySerial.write(Serial.read());    //Forward what Serial received to Software Serial Port
+//    char c = Serial.read();
+//    mySerial.write(c);
+//    found += c;
+//    if(found == "OK")
+//      mySerial.write("clip found\n");
+//    mySerial.write("\n string found: ");
+//    //mySerial.write(found);
+    
   }
+
   
   while(mySerial.available()) 
   {   
     Serial.write(mySerial.read());//Forward what Software Serial received to Serial Port
+//    String osama = mySerial.readString();
+//    Serial.print("printing string: ");
+//    Serial.println(osama);
+//    char c = mySerial.read();
+//    Serial.write(c);
+//    found += c;
+//    if(c == '8' && check == true){
+//      
+//      numCheck = true;
+//      Serial.println("plus found");
+//    }
+//    if(numCheck){
+//      prev += c;
+//    }
+//    if(prev == "88"){
+//      Serial.println("clip found");
+//    }
+    
+      
+//    Serial.print("\n string found: ");
+//    Serial.println(found);
+  
+//  if(check && c == "+"){
+//    Serial.write("plus found");
+//  }
+//    
   }
+  //Serial.println(prev);
+  //prev = found;
+  //Serial.println("found : " + found);
+}
+
+
+void Makecall()
+{
+Serial.println ("Makeing calling");
+delay (1000);
+mySerial.println("ATD+ +8801857715545;");
+delay(10000);
+Serial.write ("make call");
+mySerial.println("ATH"); //For call hang up
+
+//
+//Serial.println ("Makeing calling");
+//delay (1000);
+//mySerial.println("ATD+ +8801765014450;");
+//delay(10000);
+//Serial.write ("make call");
+//mySerial.println("ATH"); //For call hang up
+
 }
