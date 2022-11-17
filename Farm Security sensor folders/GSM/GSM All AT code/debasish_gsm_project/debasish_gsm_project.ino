@@ -65,7 +65,18 @@ delay (1000);
 SIM900A.println("ATD+ +8801857715545;");
 delay(1000);
 Serial.write ("make call");
-//SIM900A.println("ATH"); //For call hang up
+delay(15000);
+//SIM900A.println("ATH"); //For call hang 
+
+
+// to call another owner
+//Serial.println ("Makeing calling");
+//delay (1000);
+//SIM900A.println("ATD+ +8801xxxxxxxxx;");
+//delay(1000);
+//Serial.write ("make call");
+//delay(15000);
+////SIM900A.println("ATH"); //For call hang up
 
 }
 
