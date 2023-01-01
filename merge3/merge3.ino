@@ -21,8 +21,10 @@
 //#define SD_ChipSelectPin 10   // using digital pin 10 on arduino uno 328, can use other pins
 #define SD_SpeakerPin 46        // previously was 9 for uno
 
-#define call_owner  "ATD+ +8801857715545;"            // put owner phone number
-#define sms_owner "AT+CMGS=\"+8801857715545\"\r"
+#define call_owner1  "ATD+ +8801857715545;"            // put owner phone number
+#define sms_owner1 "AT+CMGS=\"+8801857715545\"\r"
+#define call_owner2  "ATD+ +8801765014450;"            // put owner phone number
+#define sms_owner2 "AT+CMGS=\"+8801765014450\"\r"
 
 #define MOSFET 49
 
@@ -110,12 +112,13 @@ void numberCheck();
 
 void loop(){
   //Serial.println("inside loop");
-  numberCheck();      // check if owner called to turn sensor off/on
+  
   //rtcUpdate();        // update from RTC
   timeCheck();        // checking the time for sensor validity 
   vibrationCheck();   // checking if vibration detected, delay = 7 sec
   //laserCheck();       // checking if laser interference is interfered
   //hc12_Signal();      // sending signal to the receiving hc12 (maybe not needed)
+  numberCheck();      // check if owner called to turn sensor off/on
 
 
 //  if (SIM900A.available()>0)
@@ -171,7 +174,8 @@ void vibrationCheck(){
       mySerial.write("VIBRATION DETECTED");         // sending alert signal to receiving hc12
       Serial.println("VIBRATION DETECTED");
       led_blink();                                  // blinking LED , delay = 1 sec
-      Makecall();                                   // calling owner to alert delay = 6 sec
+      Makecall(1);                                   // calling owner to alert delay = 6 sec
+      //Makecall(2);
       //playAudio();                                  // playing audio from sd card (code may be updated later)
       
     }else{
@@ -191,8 +195,9 @@ void laserCheck(){
     digitalWrite(ACTION,HIGH);              // Set the buzzer ON
     Serial.println("No laser");
     mySerial.write("LASER COMPROMISED");    // sending alert signal to receiving hc12
-    Makecall();                             // calling owner to alert
-    //playAudio();                            // playing audio from sd card (code may be updated later)
+    Makecall(1);                            // calling owner to alert delay = 6 sec
+    //Makecall(2);                            // calling owner to alert
+    //playAudio();                          // playing audio from sd card (code may be updated later)
   }
   delay(200);
 }
@@ -222,7 +227,7 @@ void numberCheck(){
     Serial.println("available");
   }
 
- if(ifCallMade == false && (incoming_call_string.indexOf("+88018577155") > -1   || incoming_call_string.indexOf("+8801303273337") > -1) ){    // Check if the string we read had any substring containing the owner number
+  if(ifCallMade == false && (incoming_call_string.indexOf("+88018577155") > -1   || incoming_call_string.indexOf("+8801765014450") > -1) ){    // Check if the string we read had any substring containing the owner number
     Serial.println("FOUNDDDD");                                                                                                               // Makecall() func can also detect owner, we want to avoid that
     if(toggle == 1){
       digitalWrite(MOSFET, LOW);
@@ -233,6 +238,7 @@ void numberCheck(){
     toggle = toggle * (-1);
     incoming_call_string = "";
     //return true;
+    delay(5000);
   }
   else if(ifCallMade == true){
     Serial.println("GSM called owner at some point");
@@ -264,7 +270,8 @@ void SendMessage(String msg){
   delay(1000);
   Serial.println ("Set SMS Number");
   //SIM900A.println("AT+CMGS=\"+8801857715545\"\r");  // Receiver’s Mobile Number
-  SIM900A.println(sms_owner);
+  SIM900A.println(sms_owner1);
+  SIM900A.println(sms_owner2);
   delay(1000);
   Serial.println ("Set SMS Content");
   SIM900A.println(msg);
@@ -283,12 +290,21 @@ void RecieveMessage(){
   Serial.write ("Messege Received Sucessfully");
 }
 
-void Makecall(){
+void Makecall(int num){
   Serial.println ("Calling owner");
   delay (1000);
   //SIM900A.println("ATD+ +8801857715545;");
-  SIM900A.println(call_owner);
-  Serial.write ("call made");
+  {
+    SIM900A.println(call_owner2);
+    Serial.write ("call made 1");
+    delay(20000);
+  }{
+    SIM900A.println(call_owner1);
+    Serial.write ("call made 2");
+  }
+
+  //delay(5000);
+  
   delay(5000);
   //Serial.write ("hanging up call");
   //SIM900A.println("ATH");                           // For call hang up

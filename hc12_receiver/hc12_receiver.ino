@@ -12,8 +12,8 @@
 #define TX 3                      //Connect to the RX pin of the HC-12
 //#define RX 10                   //Connect to the TX pin of the HC-12
 //#define TX 11                   //Connect to the RX pin of the HC-12
-#define yellowLED 11
-#define redLED 12
+#define yellowLED 7
+#define redLED 8
 #define pushButton 6
 
 //#define SD_ChipSelectPin 53     // example uses hardware SS pin 53 on Mega2560
