@@ -27,6 +27,7 @@
 #define sms_owner2 "AT+CMGS=\"+8801765014450\"\r"
 
 #define MOSFET 49
+#define buzzer 48
 
 
 DS3231  rtc(SDA, SCL);          // Init the DS3231 using the hardware interface
@@ -49,7 +50,9 @@ bool ifCallMade = false;
 
 void setup(){
   pinMode(MOSFET,OUTPUT);
+  pinMode(buzzer, OUTPUT);
   digitalWrite(MOSFET, HIGH);
+  digitalWrite(buzzer,LOW);
   //Serial.println("inside setup");
   mySerial.begin(9600);         // initializing hc12 software serial as well
   Serial.begin(9600);           // initially was 115200 
@@ -109,6 +112,7 @@ void timeCheck();
 void hc12_Signal();
 void playAudio();
 void numberCheck();
+void buzzing();
 
 void loop(){
   //Serial.println("inside loop");
@@ -116,7 +120,7 @@ void loop(){
   //rtcUpdate();        // update from RTC
   timeCheck();        // checking the time for sensor validity 
   vibrationCheck();   // checking if vibration detected, delay = 7 sec
-  //laserCheck();       // checking if laser interference is interfered
+  laserCheck();       // checking if laser interference is interfered
   //hc12_Signal();      // sending signal to the receiving hc12 (maybe not needed)
   numberCheck();      // check if owner called to turn sensor off/on
 
@@ -124,7 +128,7 @@ void loop(){
 //  if (SIM900A.available()>0)
 //    Serial.write(SIM900A.read());
 
-  // Wait one second before repeating loop :) 
+  // Wait one second before repeating loop 🙂 
   delay (1000);       // this delay needed for rtc
 }
 
@@ -177,7 +181,7 @@ void vibrationCheck(){
       Makecall(1);                                   // calling owner to alert delay = 6 sec
       //Makecall(2);
       //playAudio();                                  // playing audio from sd card (code may be updated later)
-      
+      buzzing();
     }else{
       //Serial.println("VIBRATION not DETECTED");
       digitalWrite(LED, OFF);
@@ -198,6 +202,7 @@ void laserCheck(){
     Makecall(1);                            // calling owner to alert delay = 6 sec
     //Makecall(2);                            // calling owner to alert
     //playAudio();                          // playing audio from sd card (code may be updated later)
+    buzzing();
   }
   delay(200);
 }
@@ -331,4 +336,10 @@ void updateSerial()
     Serial.write(SIM900A.read());//Forward what Software Serial received to Serial Port
   }
 
+}
+
+void buzzing(){
+  digitalWrite(buzzer, HIGH);
+  delay(10000);
+  digitalWrite(buzzer, LOW);
 }

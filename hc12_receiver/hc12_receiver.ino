@@ -17,7 +17,7 @@
 #define pushButton 6
 
 //#define SD_ChipSelectPin 53     // example uses hardware SS pin 53 on Mega2560
-#define SD_ChipSelectPin 10       // using digital pin 10 on arduino uno 328, can use other pins
+#define SD_ChipSelectPin 4       // using digital pin 10 on arduino uno 328, can use other pins
 #define SD_SpeakerPin 9        
 
 SoftwareSerial mySerial(RX, TX);
@@ -37,12 +37,13 @@ void setup() {
 
   //sd card setup
   tmrpcm.speakerPin = SD_SpeakerPin;   //5,6,11 or 46 on Mega, 9 on Uno, Nano, etc
-//  if(!SD.begin(SD_ChipSelectPin)){
-//    Serial.println("SD fail");
-//    return;
-//  }
-  //tmrpcm.setVolume(6);
-  //tmrpcm.play("song.wav");
+  if(!SD.begin(SD_ChipSelectPin)){
+    Serial.println("SD fail");
+    return;
+  }
+//  tmrpcm.setVolume(6);
+//  tmrpcm.play("song.wav");
+//  Serial.println("song played");
 
 }
 
@@ -53,13 +54,15 @@ void turnOffLED();
 void loop() { // run over and over
   if (mySerial.available()) {
     found = mySerial.readString();
-    Serial.write(mySerial.read());
+    Serial.println(found);
+    //Serial.write(mySerial.read());
 
     if(found.indexOf("VIBRATION DETECTED") > -1){
       digitalWrite(yellowLED, HIGH);              // vibration detected, turn yellow led on
-      
+      playAudio();
     }else if(found.indexOf("LASER COMPROMISED") > -1){
       digitalWrite(redLED, HIGH);                 // laser is compromised, turn red led on
+      playAudio();
     }
     found = "";
     
@@ -69,7 +72,7 @@ void loop() { // run over and over
   }
 
 
-  turnOffLED();
+  //turnOffLED();
 }
 
 // play sd card audio 

@@ -1,6 +1,6 @@
 #include <SD.h>                       // need to include the SD library
 //#define SD_ChipSelectPin 53         // example uses hardware SS pin 53 on Mega2560
-#define SD_ChipSelectPin 10           // using digital pin 10 on arduino uno 328, can use other pins
+#define SD_ChipSelectPin 4           // using digital pin 10 on arduino uno 328, can use other pins
 #define SD_SpeakerPin 9
 #include <TMRpcm.h>                   // also need to include this library...
 #include <SPI.h>
