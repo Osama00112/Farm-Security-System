@@ -29,7 +29,6 @@
 #define MOSFET 49
 #define buzzer 48
 
-
 DS3231  rtc(SDA, SCL);          // Init the DS3231 using the hardware interface
 bool sensorValidity = true;
 
@@ -47,7 +46,6 @@ TMRpcm tmrpcm;                  // needed for sd card module
 int toggle = 1;
 bool ifCallMade = false;
 
-
 void setup(){
   pinMode(MOSFET,OUTPUT);
   pinMode(buzzer, OUTPUT);
@@ -57,7 +55,6 @@ void setup(){
   mySerial.begin(9600);         // initializing hc12 software serial as well
   Serial.begin(9600);           // initially was 115200 
   SIM900A.begin(9600);          // GSM Module Baud rate – communication speed
-
 
   Serial.println("Initializing...");
   delay(1000);
@@ -82,7 +79,7 @@ void setup(){
   rtc.begin();
   // The following lines can be uncommented to set the date and time
   rtc.setDOW(TUESDAY);          // Set Day-of-Week to SUNDAY
-  rtc.setTime(6, 57, 0);       // Set the time to 12:00:00 (24hr format)
+  rtc.setTime(5, 57, 0);       // Set the time to 12:00:00 (24hr format)
   rtc.setDate(11, 3, 2022);     // Set the date to January 1st, 2014
 
   //vibration setup
@@ -112,7 +109,7 @@ void timeCheck();
 void hc12_Signal();
 void playAudio();
 void numberCheck();
-void buzzing();
+void buzzingAndBlink();
 
 void loop(){
   //Serial.println("inside loop");
@@ -129,9 +126,8 @@ void loop(){
 //    Serial.write(SIM900A.read());
 
   // Wait one second before repeating loop 🙂 
-  delay (1000);       // this delay needed for rtc
+  delay (500);       // this delay needed for rtc
 }
-
 
 void rtcUpdate(){     // serial prints wont be needed afterwards. maybe discarded 
   // Send Day-of-Week
@@ -155,54 +151,65 @@ void timeCheck(){
     toggle = toggle * (-1);
     Serial.println("its 7 am. sensors turned OFF");
   }
-    
-    
+
   //checking if it is 7 P.M.
   if((present_time[0] == '1' && present_time[1] == '9' && present_time[2] == ':')){
     //sensorValidity = true;
     digitalWrite(MOSFET, HIGH);
     toggle = toggle * (-1);
     Serial.println("its 7 pm.sensors turned ON");
-  }
-    
+  }    
 }
-
 
 //Function to check if vibration is detected
 void vibrationCheck(){
-  if(sensorValidity){                               // only functional when sensorValidity == true
+  //if(sensorValidity)
+  {                               // only functional when sensorValidity == true
     //vibration input
     previous_condition = present_condition;
     present_condition = digitalRead(A5);            // Reading digital data from the A5 Pin of the Arduino.
     if (previous_condition != present_condition) {
+      //buzzingAndBlink();
+      digitalWrite(buzzer, HIGH);
+      digitalWrite(LED, HIGH);
       mySerial.write("VIBRATION DETECTED");         // sending alert signal to receiving hc12
       Serial.println("VIBRATION DETECTED");
-      led_blink();                                  // blinking LED , delay = 1 sec
+      //led_blink();                                  // blinking LED , delay = 1 sec
       Makecall(1);                                   // calling owner to alert delay = 6 sec
       //Makecall(2);
       //playAudio();                                  // playing audio from sd card (code may be updated later)
-      buzzing();
+
     }else{
+      digitalWrite(buzzer, LOW);
+      digitalWrite(LED, LOW);
       //Serial.println("VIBRATION not DETECTED");
-      digitalWrite(LED, OFF);
+      //digitalWrite(LED, OFF);
     }
   }
+
+  delay(1000);
 }
 
 // Function to check if laser detection is interfered
 void laserCheck(){
   int detected = digitalRead(DETECT);       // read Laser sensor 
-  if( detected == HIGH){
-    digitalWrite(ACTION,LOW);               // set the buzzer OFF
-    Serial.println("Detected!");
+  if(detected == HIGH){
+    //digitalWrite(ACTION,LOW);               // set the buzzer OFF
+    //Serial.println("Detected!");
+    digitalWrite(buzzer, LOW);
+    digitalWrite(LED, LOW);
   }else{
-    digitalWrite(ACTION,HIGH);              // Set the buzzer ON
+    //buzzingAndBlink();
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(LED, HIGH);
+    //digitalWrite(ACTION,HIGH);              // Set the buzzer ON
     Serial.println("No laser");
     mySerial.write("LASER COMPROMISED");    // sending alert signal to receiving hc12
     Makecall(1);                            // calling owner to alert delay = 6 sec
     //Makecall(2);                            // calling owner to alert
     //playAudio();                          // playing audio from sd card (code may be updated later)
-    buzzing();
+    //digitalWrite(buzzer, LOW);
+    //digitalWrite(LED, LOW);
   }
   delay(200);
 }
@@ -242,29 +249,26 @@ void numberCheck(){
     }
     toggle = toggle * (-1);
     incoming_call_string = "";
-    //return true;
-    delay(5000);
+    delay(3000);
   }
   else if(ifCallMade == true){
     Serial.println("GSM called owner at some point");
     ifCallMade = false;
     incoming_call_string = "";
   }
-
-  //return false;
 }
 
 
 // LED Blinking code that blinks 2 times in 1 second.
 void led_blink(void) {
   digitalWrite(LED, ON);
-  delay(250);
+  delay(150);
   digitalWrite(LED, OFF);
-  delay(250);
+  delay(150);
   digitalWrite(LED, ON);
-  delay(250);
+  delay(150);
   digitalWrite(LED, OFF);
-  delay(250);
+  delay(150);
 }
 
 
@@ -297,20 +301,18 @@ void RecieveMessage(){
 
 void Makecall(int num){
   Serial.println ("Calling owner");
-  delay (1000);
-  //SIM900A.println("ATD+ +8801857715545;");
-  {
-    SIM900A.println(call_owner2);
-    Serial.write ("call made 1");
-    delay(20000);
-  }{
-    SIM900A.println(call_owner1);
-    Serial.write ("call made 2");
-  }
-
+  delay (500);  
+  SIM900A.println(call_owner2);
+  Serial.write ("call made  to owner 2");
+  //delay(20000);
+  
+ // {
+  //  SIM900A.println(call_owner1);
+  //  Serial.write ("call made to owner 1");
+//}
   //delay(5000);
   
-  delay(5000);
+  delay(4000);
   //Serial.write ("hanging up call");
   //SIM900A.println("ATH");                           // For call hang up
   ifCallMade = true;
@@ -338,8 +340,13 @@ void updateSerial()
 
 }
 
-void buzzing(){
-  digitalWrite(buzzer, HIGH);
-  delay(10000);
-  digitalWrite(buzzer, LOW);
+void buzzingAndBlink(){
+  for(int i=0; i<10; i++){
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(LED, HIGH);
+    delay(2000);
+    digitalWrite(buzzer, LOW);
+    digitalWrite(LED, LOW);
+    delay(2000);
+  }
 }

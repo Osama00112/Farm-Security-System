@@ -12,7 +12,7 @@
 #define TX 3                      //Connect to the RX pin of the HC-12
 //#define RX 10                   //Connect to the TX pin of the HC-12
 //#define TX 11                   //Connect to the RX pin of the HC-12
-#define yellowLED 7
+#define blueLED 7
 #define redLED 8
 #define pushButton 6
 
@@ -28,11 +28,11 @@ void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
 
-  pinMode(yellowLED, OUTPUT);     // setting the pins as digital output pins (working as alert LED's)
+  pinMode(blueLED, OUTPUT);     // setting the pins as digital output pins (working as alert LED's)
   pinMode(redLED, OUTPUT);
   pinMode(pushButton, INPUT);     // setting pushButton pin as input (when owner pushes a button, allert LED's are turned off
 
-  digitalWrite(yellowLED, LOW);   // at first there is no alert, hence setting their digital pins low
+  digitalWrite(blueLED, LOW);   // at first there is no alert, hence setting their digital pins low
   digitalWrite(redLED, LOW);
 
   //sd card setup
@@ -49,6 +49,8 @@ void setup() {
 
 void playAudio();
 void turnOffLED();
+void blueBlink();
+void redBlink();
 
 
 void loop() { // run over and over
@@ -58,10 +60,12 @@ void loop() { // run over and over
     //Serial.write(mySerial.read());
 
     if(found.indexOf("VIBRATION DETECTED") > -1){
-      digitalWrite(yellowLED, HIGH);              // vibration detected, turn yellow led on
+      //digitalWrite(blueLED, HIGH);              // vibration detected, turn blue led on
+      blueBlink();
       playAudio();
     }else if(found.indexOf("LASER COMPROMISED") > -1){
-      digitalWrite(redLED, HIGH);                 // laser is compromised, turn red led on
+      //digitalWrite(redLED, HIGH);                 // laser is compromised, turn red led on
+      redBlink();
       playAudio();
     }
     found = "";
@@ -70,8 +74,6 @@ void loop() { // run over and over
   if (Serial.available()) {
     mySerial.write(Serial.read());
   }
-
-
   //turnOffLED();
 }
 
@@ -84,7 +86,25 @@ void playAudio(){
 
 void turnOffLED(){  
   if(digitalRead(pushButton) == HIGH){          // turning LED's off when button pushed    
-    digitalWrite(yellowLED, LOW);
+    digitalWrite(blueLED, LOW);
     digitalWrite(redLED, LOW);  
+  }
+}
+
+void blueBlink(){
+  for(int i=0; i<10; i++){
+    digitalWrite(blueLED, HIGH);
+    delay(250);
+    digitalWrite(blueLED, LOW);
+    delay(250);
+  }
+}
+
+void redBlink(){
+  for(int i=0; i<10; i++){
+    digitalWrite(redLED, HIGH);
+    delay(250);
+    digitalWrite(redLED, LOW);
+    delay(250);
   }
 }
