@@ -195,7 +195,7 @@ void laserCheck(){
   int detected = digitalRead(DETECT);       // read Laser sensor 
   if(detected == HIGH){
     //digitalWrite(ACTION,LOW);               // set the buzzer OFF
-    //Serial.println("Detected!");
+    Serial.println("Detected!");
     digitalWrite(buzzer, LOW);
     digitalWrite(LED, LOW);
   }else{

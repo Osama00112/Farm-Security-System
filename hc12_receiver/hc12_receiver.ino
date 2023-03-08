@@ -15,6 +15,7 @@
 #define blueLED 7
 #define redLED 8
 #define pushButton 6
+#define buzzer 5
 
 //#define SD_ChipSelectPin 53     // example uses hardware SS pin 53 on Mega2560
 #define SD_ChipSelectPin 4       // using digital pin 10 on arduino uno 328, can use other pins
@@ -28,6 +29,7 @@ void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
 
+  pinMode(buzzer, OUTPUT);
   pinMode(blueLED, OUTPUT);     // setting the pins as digital output pins (working as alert LED's)
   pinMode(redLED, OUTPUT);
   pinMode(pushButton, INPUT);     // setting pushButton pin as input (when owner pushes a button, allert LED's are turned off
@@ -94,8 +96,10 @@ void turnOffLED(){
 void blueBlink(){
   for(int i=0; i<10; i++){
     digitalWrite(blueLED, HIGH);
+    digitalWrite(buzzer, HIGH);
     delay(250);
     digitalWrite(blueLED, LOW);
+    digitalWrite(buzzer, LOW);
     delay(250);
   }
 }
@@ -103,8 +107,10 @@ void blueBlink(){
 void redBlink(){
   for(int i=0; i<10; i++){
     digitalWrite(redLED, HIGH);
+    digitalWrite(buzzer, HIGH);
     delay(250);
     digitalWrite(redLED, LOW);
+    digitalWrite(buzzer, LOW);
     delay(250);
   }
 }
