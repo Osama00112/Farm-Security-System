@@ -1,0 +1,58 @@
+#include <SoftwareSerial.h>
+
+SoftwareSerial mySerial(12, 13);   // RX, TX
+int callStatus = 0;
+String phoneNumber = "1234567890"; // Replace with your phone number
+
+void setup() {
+  Serial.begin(9600);
+  mySerial.begin(9600);
+  delay(2000);
+  Serial.println("AT");
+}
+
+void loop() {
+  // Get the current call status
+  mySerial.println("AT+CPAS");
+  delay(500);
+  if (mySerial.available()) {
+    String response = mySerial.readString();
+    if (response.indexOf("+CPAS: 0") >= 0) {
+      callStatus = 0;
+    } else if (response.indexOf("+CPAS: 3") >= 0) {
+      callStatus = 1;
+    }
+  }
+
+  // If a call is not in progress
+  if (callStatus == 0) {
+    mySerial.println("AT+CSQ");
+    delay(500);
+    if (mySerial.available()) {
+      String response = mySerial.readString();
+      int rssiStart = response.indexOf("+CSQ:") + 5;
+      int rssiEnd = response.indexOf(",", rssiStart);
+      int rssi = response.substring(rssiStart, rssiEnd).toInt();
+
+      // Convert the raw RSSI value to dBm units
+      int rssi_dbm = -113 + (2 * rssi);
+
+      // Print the RSSI value to the Serial Monitor
+      Serial.print("RSSI: ");
+      Serial.print(rssi_dbm);
+      Serial.println(" dBm");
+
+      // Plot the RSSI value on the Serial Plotter
+      Serial.println(rssi_dbm);
+    }
+
+    // Call the phone number after 5 seconds
+    delay(15000);
+    mySerial.println("ATD" + phoneNumber + ";");
+    delay(10000);
+  }
+  // If a call is in progress
+  else {
+    delay(5000);
+  }
+}

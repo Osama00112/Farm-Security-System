@@ -1,0 +1,58 @@
+#include <SoftwareSerial.h>
+
+#define HC12_RX 10
+#define HC12_TX 11
+#define HC12_SET 12
+
+SoftwareSerial hc12(HC12_RX, HC12_TX);
+
+unsigned long prev_time;
+unsigned long data_count;
+
+void setup() {
+  Serial.begin(9600);
+  hc12.begin(9600);
+  pinMode(HC12_SET, OUTPUT);
+  digitalWrite(HC12_SET, HIGH);
+  prev_time = millis();
+  data_count = 0;
+}
+
+void loop() {
+  while (hc12.available()) {
+    char c = hc12.read();
+    data_count++;
+  }
+  if (millis() - prev_time >= 1000) {
+    float data_rate = data_count / 1000.0;
+    Serial.print("Data Transfer Rate: ");
+    Serial.print(data_rate);
+    Serial.println(" KB/s");
+    prev_time = millis();
+    data_count = 0;
+  }
+}
+
+
+
+for uno
+
+#include <SoftwareSerial.h>
+
+#define HC12_RX 10
+#define HC12_TX 11
+#define HC12_SET 12
+
+SoftwareSerial hc12(HC12_RX, HC12_TX);
+
+void setup() {
+  Serial.begin(9600);
+  hc12.begin(9600);
+  pinMode(HC12_SET, OUTPUT);
+  digitalWrite(HC12_SET, HIGH);
+}
+
+void loop() {
+  hc12.println("Hello World!");
+  delay(50);
+}

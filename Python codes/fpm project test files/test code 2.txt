@@ -1,0 +1,200 @@
+#define VIBRATION_PIN A5
+
+void setup() {
+  // Initialize the serial communication at 9600 baud rate
+  Serial.begin(9600);
+}
+
+void loop() {
+  int vibrationValue = analogRead(VIBRATION_PIN);
+  Serial.println(vibrationValue);
+  delay(100);
+}
+
+2
+#define VIBRATION_PIN A5
+
+void setup() {
+  // Initialize the serial communication at 9600 baud rate
+  Serial.begin(9600);
+}
+
+void loop() {
+  int vibrationValue = analogRead(VIBRATION_PIN);
+  Serial.print((millis() / 1000.0), 3); // Print time in seconds
+  Serial.print(","); // Delimiter for time and sensitivity value
+  Serial.println(vibrationValue); // Print the sensitivity value
+}
+
+3
+
+#define VIBRATION_PIN A5
+
+void setup() {
+  // Initialize the serial communication at 9600 baud rate
+  Serial.begin(9600);
+}
+
+void loop() {
+  int vibrationValue = analogRead(VIBRATION_PIN);
+  Serial.print((millis() / 2000.0), 3); // Print time in seconds
+  Serial.print(","); // Delimiter for time and sensitivity value
+  Serial.println(vibrationValue); // Print the sensitivity value
+
+  delay(200); // Wait for 2 seconds before next iteration
+}
+
+for laser
+
+
+int laserPin = 9;     // laser diode pin
+int receiverPin = A0; // receiver sensor pin
+
+void setup() {
+  // initialize serial communication at 9600 baud
+  Serial.begin(9600);
+
+  // set laserPin as output
+  pinMode(laserPin, OUTPUT);
+
+  // turn laser diode on
+  digitalWrite(laserPin, HIGH);
+}
+
+void loop() {
+  // read the value from the receiver sensor
+  int sensorValue = analogRead(receiverPin);
+
+  // send the value to the serial plotter
+  Serial.println(sensorValue);
+
+  // wait for 10 milliseconds
+  delay(10);
+}
+
+for gsm
+
+
+#include <SoftwareSerial.h> // for SIM900 module
+
+SoftwareSerial SIM900(7, 8); // create software serial object for SIM900 module
+int data = 0;               // variable to store data
+
+void setup() {
+  // initialize serial communication at 9600 baud
+  Serial.begin(9600);
+
+  // initialize SIM900 module
+  SIM900.begin(9600);
+  delay(1000);
+
+  // turn off echo
+  SIM900.println("ATE0");
+  delay(500);
+
+  // check if SIM900 module is ready
+  SIM900.println("AT");
+  delay(1000);
+  if (SIM900.find("OK")) {
+    Serial.println("SIM900 module is ready");
+  } else {
+    Serial.println("SIM900 module is not ready");
+  }
+}
+
+void loop() {
+  // increment data
+  data++;
+
+  // send data to serial plotter
+  Serial.println(data);
+
+  // call a number
+  if (data % 10 == 0) {
+    SIM900.println("ATD+1234567890;"); // set recipient phone number
+    delay(5000);
+    SIM900.println("ATH"); // hang up
+    delay(1000);
+  }
+
+  // check for incoming call
+  SIM900.println("AT+CLCC"); // check call status
+  delay(1000);
+  if (SIM900.find("+CLCC: 1,0,0,0,0,\"+1234567890\",129")) { // check caller phone number
+    Serial.println("Incoming call");
+    SIM900.println("ATA"); // answer call
+    delay(5000);
+    SIM900.println("ATH"); // hang up
+    delay(1000);
+  }
+
+  // wait for 1 second
+  delay(1000);
+}
+
+HC-12
+
+for uno
+
+#include <SoftwareSerial.h>
+
+#define HC12_UNO_RX 2
+#define HC12_UNO_TX 3
+
+SoftwareSerial HC12_UNO(HC12_UNO_RX, HC12_UNO_TX);
+
+void setup() {
+  Serial.begin(9600);
+  HC12_UNO.begin(9600);
+  Serial.println("HC-12 module on Uno is ready!");
+}
+
+void loop() {
+  // Read data from HC-12 module on Uno and send to Mega
+  if (HC12_UNO.available() > 0) {
+    char c = HC12_UNO.read();
+    Serial.write(c); // send data to serial monitor for debugging
+    Serial.write(c); // send data to HC-12 module on Mega
+    Serial.print((int)c); // send data to serial plotter
+    Serial.write(','); // separate the values with a comma
+  }
+
+  // Read data from serial monitor and send to HC-12 module on Uno
+  if (Serial.available() > 0) {
+    char c = Serial.read();
+    HC12_UNO.write(c);
+  }
+}
+
+for mega
+
+
+#include <SoftwareSerial.h>
+
+#define HC12_MEGA_RX 10
+#define HC12_MEGA_TX 11
+
+SoftwareSerial HC12_MEGA(HC12_MEGA_RX, HC12_MEGA_TX);
+
+void setup() {
+  Serial.begin(9600);
+  HC12_MEGA.begin(9600);
+  Serial.println("HC-12 module on Mega is ready!");
+}
+
+void loop() {
+  // Read data from HC-12 module on Mega and send to Uno
+  if (HC12_MEGA.available() > 0) {
+    char c = HC12_MEGA.read();
+    Serial.write(c); // send data to serial monitor for debugging
+    Serial1.write(c); // send data to HC-12 module on Uno
+    Serial.print((int)c); // send data to serial plotter
+    Serial.write(','); // separate the values with a comma
+  }
+
+  // Read data from serial monitor and send to HC-12 module on Mega
+  if (Serial.available() > 0) {
+    char c = Serial.read();
+    HC12_MEGA.write(c);
+  }
+}

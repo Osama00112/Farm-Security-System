@@ -1,0 +1,40 @@
+uno
+
+void setup() {
+  Serial.begin(9600); // initialize the Uno serial port
+  Serial.println("Starting HC-12...");
+  Serial.write("AT+RX"); // put the module in receive mode
+}
+
+void loop() {
+  if (Serial.available()) {
+    char incomingByte = Serial.read();
+    if (incomingByte == ' ') {
+      Serial.write("AT+RX"); // put the module in receive mode
+    }
+  }
+  
+  int signal_strength = analogRead(A0); // read signal strength from the HC-12 module
+  Serial.println(signal_strength); // send the signal strength to the Uno board
+  delay(1000); // wait for 1 second before reading again
+}
+
+
+mega
+
+void setup() {
+  Serial.begin(9600);
+  Serial1.begin(9600); // initialize the HC-12 serial port
+}
+
+void loop() {
+  if (Serial1.available()) { // check if there is data available on the HC-12 serial port
+    String response = Serial1.readStringUntil('\n'); // read the response from the HC-12 module
+    if (response.startsWith("+RX")) { // check if the response is a valid data packet
+      int signalStrength = response.substring(7).toInt(); // extract the signal strength value from the response
+      Serial.print(millis());
+      Serial.print(",");
+      Serial.println(signalStrength);
+    }
+  }
+}

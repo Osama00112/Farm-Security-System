@@ -1,0 +1,62 @@
+#include <SoftwareSerial.h>
+
+#define HC12_UNO_RX 10
+#define HC12_UNO_TX 11
+
+SoftwareSerial HC12_UNO(HC12_UNO_RX, HC12_UNO_TX);
+
+void setup() {
+  Serial.begin(9600);
+  HC12_UNO.begin(9600);
+  Serial.println("HC-12 module on Uno is ready!");
+}
+
+void loop() {
+  // Read data from HC-12 module on Uno and send to Mega
+  if (HC12_UNO.available() > 0) {
+    char c = HC12_UNO.read();
+    Serial.write(c); // send data to serial monitor for debugging
+    Serial.write(c); // send data to HC-12 module on Mega
+    Serial.print((int)c); // send data to serial plotter
+    Serial.write(','); // separate the values with a comma
+  }
+
+  // Read data from serial monitor and send to HC-12 module on Uno
+  if (Serial.available() > 0) {
+    char c = Serial.read();
+    HC12_UNO.write(c);
+  }
+}
+For the second code (Mega with HC-12):
+
+scss
+Copy code
+#include <SoftwareSerial.h>
+
+#define HC12_MEGA_RX 10
+#define HC12_MEGA_TX 11
+
+SoftwareSerial HC12_MEGA(HC12_MEGA_RX, HC12_MEGA_TX);
+
+void setup() {
+  Serial.begin(9600);
+  HC12_MEGA.begin(9600);
+  Serial.println("HC-12 module on Mega is ready!");
+}
+
+void loop() {
+  // Read data from HC-12 module on Mega and send to Uno
+  if (HC12_MEGA.available() > 0) {
+    char c = HC12_MEGA.read();
+    Serial.write(c); // send data to serial monitor for debugging
+    Serial1.write(c); // send data to HC-12 module on Uno
+    Serial.print((int)c); // send data to serial plotter
+    Serial.write(','); // separate the values with a comma
+  }
+
+  // Read data from serial monitor and send to HC-12 module on Mega
+  if (Serial.available() > 0) {
+    char c = Serial.read();
+    HC12_MEGA.write(c);
+  }
+}
