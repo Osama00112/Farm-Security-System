@@ -1,0 +1,26 @@
+micro sd card module: SPI pins of arduino
+
+SD 	- UNO 	-- MEGA
+--------------------------
+CS 	- 4 	-- 53
+MOSI 	- 11 	-- 51
+CLK 	- 13 	-- 52
+MISO 	- 12 	-- 50
+GND 	- GND 	-- GND  
+
+
+
+hc-12:
+vcc-5v
+gnd-gnd
+tx-2
+rx-3
+set-gnd
+
+
+RTC:
+// Arduino Mega:
+// ----------------------
+// DS3231:  SDA pin   -> Arduino Digital 20 (SDA) or the dedicated SDA pin
+//          SCL pin   -> Arduino Digital 21 (SCL) or the dedicated SCL pin
+//

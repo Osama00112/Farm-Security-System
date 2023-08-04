@@ -61,7 +61,7 @@ void loop() { // run over and over
     Serial.println(found);
     //Serial.write(mySerial.read());
 
-    if(found.indexOf("VIBRATION DETECTED") > -1){
+    if(found.indexOf("VIBRATION") > -1){
       //digitalWrite(blueLED, HIGH);              // vibration detected, turn blue led on
       blueBlink();
       playAudio();
@@ -83,6 +83,7 @@ void loop() { // run over and over
 void playAudio(){
   tmrpcm.setVolume(6);
   tmrpcm.play("song.wav");
+  
 }
 
 
