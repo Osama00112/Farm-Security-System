@@ -32,7 +32,7 @@ void loop() {
   bool value4 = digitalRead(Sfour);
   bool value5 = digitalRead(Sfive);
 
-  Serial.println(value5);
+  //Serial.println(value5);
   if (value1 == 1 || value2 == 1 || value3 == 1 || value4 ==1 || value5 == 1) {
     digitalWrite(LED1, HIGH);
     Serial.println("Flame detected");

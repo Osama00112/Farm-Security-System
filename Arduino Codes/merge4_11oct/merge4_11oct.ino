@@ -14,7 +14,7 @@
 #define DETECT 2                // pin 2 for  laser sensor detection pin
 #define ACTION 8                // pin 8 for action to do someting
 
-#define vibration_Sensor 6
+#define vibration_Sensor A5
 #define LED 7
 
 #define RX 10                   // Connect to the TX pin of the HC-12

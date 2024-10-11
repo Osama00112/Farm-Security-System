@@ -26,6 +26,7 @@ int previous_condition = 0;
  */
 
 void setup() {
+  Serial.begin(9600);
   pinMode(vibration_Sensor, INPUT);
   pinMode(LED, OUTPUT);
 }
@@ -43,8 +44,10 @@ void loop() {
   present_condition = digitalRead(A5); // Reading digital data from the A5 Pin of the Arduino.
 
   if (previous_condition != present_condition) {
-    led_blink();
+    //led_blink();
+    Serial.println("vibrating");
   }else{
+    Serial.println("nothing");
     digitalWrite(LED, OFF);
   }
 }
