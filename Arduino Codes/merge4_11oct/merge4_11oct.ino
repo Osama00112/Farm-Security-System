@@ -5,6 +5,9 @@
 #include <SPI.h>
 #include <stdio.h>
 
+#include <MQ2.h>
+
+
 #define ON 1
 #define OFF 0
 
@@ -29,6 +32,15 @@
 #define MOSFET 49
 #define buzzer 48
 
+#define digitalPin_mq2 47
+
+//int digitalPin_mq2 = 7;     // Digital pin for MQ2 sensor
+int Analog_Input_mq2 = A0;  // Analog pin for MQ2 sensor (optional for analog readings)
+int lpg, co, smoke;
+
+MQ2 mq2(Analog_Input_mq2);  // MQ2 sensor on analog pin A0
+
+
 DS3231  rtc(SDA, SCL);          // Init the DS3231 using the hardware interface
 bool sensorValidity = true;
 
@@ -51,7 +63,7 @@ void setup(){
   pinMode(buzzer, OUTPUT);
   digitalWrite(MOSFET, HIGH);
   digitalWrite(buzzer,LOW);
-  //Serial.println("inside setup");
+
   mySerial.begin(9600);         // initializing hc12 software serial as well
   Serial.begin(9600);           // initially was 115200 
   SIM900A.begin(9600);          // GSM Module Baud rate – communication speed
@@ -69,6 +81,10 @@ void setup(){
   updateSerial();
   SIM900A.println("AT+CLIP=1");
   updateSerial();
+
+  //smoke setup
+  pinMode(digitalPin_mq2, INPUT); // Set the digital pin as input
+  mq2.begin();          // Initialize the MQ2 sensor
   
   
   //laser setup
@@ -77,6 +93,7 @@ void setup(){
 
   //rtc setup
   rtc.begin();
+  
   // The following lines can be uncommented to set the date and time
   rtc.setDOW(TUESDAY);          // Set Day-of-Week to SUNDAY
   rtc.setTime(5, 57, 0);       // Set the time to 12:00:00 (24hr format)
@@ -88,43 +105,33 @@ void setup(){
 
   //sd card setup
   tmrpcm.speakerPin = SD_SpeakerPin;   //5,6,11 or 46 on Mega, 9 on Uno, Nano, etc
-//  if(!SD.begin(SD_ChipSelectPin)){
-//    Serial.println("SD fail");
-//    return;
-//  }
-
-  // no need to uncomment the lines below
-  //tmrpcm.setVolume(6);
-  //tmrpcm.play("song.wav");
-
-  //Serial.println("done setting up");
 
 }
 
-void led_blink(void);
+
+void timeCheck();
 void vibrationCheck();
 void laserCheck();
+void numberCheck();
+void smokeCheck();
+
+
 void rtcUpdate();
-void timeCheck();
 void hc12_Signal();
 void playAudio();
-void numberCheck();
 void buzzingAndBlink();
 
 void loop(){
-  //Serial.println("inside loop");
-  
-  //rtcUpdate();        // update from RTC
+  //rtcUpdate();      // update from RTC
   timeCheck();        // checking the time for sensor validity 
   vibrationCheck();   // checking if vibration detected, delay = 7 sec
-  //laserCheck();       // checking if laser interference is interfered
-  //hc12_Signal();      // sending signal to the receiving hc12 (maybe not needed)
+  //laserCheck();     // checking if laser interference is interfered
+
+  smokeCheck();       // delay = 0.5 sec
   numberCheck();      // check if owner called to turn sensor off/on
 
-
-//  if (SIM900A.available()>0)
-//    Serial.write(SIM900A.read());
-
+  //  if (SIM900A.available()>0)
+  //  Serial.write(SIM900A.read());
   // Wait one second before repeating loop 🙂 
   delay (500);       // this delay needed for rtc
 }
@@ -142,6 +149,43 @@ void rtcUpdate(){     // serial prints wont be needed afterwards. maybe discarde
   present_time = rtc.getTimeStr();    // present_time now contains string of time format. for example, present_time = "12:50:52"
   Serial.println(rtc.getTimeStr());
 }
+
+
+void smokeCheck(){
+  int gasDetected = digitalRead(digitalPin_mq2);
+
+  lpg = mq2.readLPG();    // Read LPG concentration
+  co = mq2.readCO();      // Read CO concentration
+  smoke = mq2.readSmoke();// Read Smoke concentration
+
+  if (gasDetected == HIGH) {
+    Serial.println("Gas detected! Checking levels...");
+    
+    // Print the sensor readings in the Serial Monitor
+    Serial.print("LPG: ");
+    Serial.print(lpg);
+    Serial.print(" ppm | CO: ");
+    Serial.print(co);
+    Serial.print(" ppm | Smoke: ");
+    Serial.print((smoke * 100) / 1000000);
+    Serial.println(" %");
+
+
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(LED, HIGH);
+    mySerial.write("SMOKE DETECTED");         // sending alert signal to receiving hc12
+
+    
+  } else {
+    digitalWrite(buzzer, LOW);
+    digitalWrite(LED, LOW);
+    Serial.println("No gas detected.");
+  }
+  
+  delay(500);  // Delay for 1 second
+
+}
+
 
 void timeCheck(){
   //checking if it is 7 A.M.
@@ -174,16 +218,11 @@ void vibrationCheck(){
       digitalWrite(LED, HIGH);
       mySerial.write("VIBRATION DETECTED");         // sending alert signal to receiving hc12
       Serial.println("VIBRATION DETECTED");
-      //led_blink();                                  // blinking LED , delay = 1 sec
       Makecall(1);                                   // calling owner to alert delay = 6 sec
-      //Makecall(2);
-      //playAudio();                                  // playing audio from sd card (code may be updated later)
 
     }else{
       digitalWrite(buzzer, LOW);
       digitalWrite(LED, LOW);
-      //Serial.println("VIBRATION not DETECTED");
-      //digitalWrite(LED, OFF);
     }
   }
 
@@ -194,42 +233,19 @@ void vibrationCheck(){
 void laserCheck(){
   int detected = digitalRead(DETECT);       // read Laser sensor 
   if(detected == HIGH){
-    //digitalWrite(ACTION,LOW);               // set the buzzer OFF
     Serial.println("Detected!");
     digitalWrite(buzzer, LOW);
     digitalWrite(LED, LOW);
   }else{
-    //buzzingAndBlink();
     digitalWrite(buzzer, HIGH);
     digitalWrite(LED, HIGH);
-    //digitalWrite(ACTION,HIGH);              // Set the buzzer ON
     Serial.println("No laser");
     mySerial.write("LASER COMPROMISED");    // sending alert signal to receiving hc12
     Makecall(1);                            // calling owner to alert delay = 6 sec
-    //Makecall(2);                            // calling owner to alert
-    //playAudio();                          // playing audio from sd card (code may be updated later)
-    //digitalWrite(buzzer, LOW);
-    //digitalWrite(LED, LOW);
   }
   delay(200);
 }
 
-
-// Function to send signal through hc12
-void hc12_Signal(){
-  if (mySerial.available()) {
-    Serial.write(mySerial.read());
-  }
-  if (Serial.available()) {
-    mySerial.write(Serial.read());
-  }
-}
-
-// play sd card audio 
-void playAudio(){
-  tmrpcm.setVolume(6);
-  tmrpcm.play("song.wav");
-}
 
 
 // Verify owner phone number
@@ -258,18 +274,6 @@ void numberCheck(){
   }
 }
 
-
-// LED Blinking code that blinks 2 times in 1 second.
-void led_blink(void) {
-  digitalWrite(LED, ON);
-  delay(150);
-  digitalWrite(LED, OFF);
-  delay(150);
-  digitalWrite(LED, ON);
-  delay(150);
-  digitalWrite(LED, OFF);
-  delay(150);
-}
 
 
 // All gsm functions
