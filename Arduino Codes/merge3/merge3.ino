@@ -102,13 +102,17 @@ void setup(){
 }
 
 void led_blink(void);
+
+void timeCheck();
 void vibrationCheck();
 void laserCheck();
+void numberCheck();
+void smokeCheck();
+
+
 void rtcUpdate();
-void timeCheck();
 void hc12_Signal();
 void playAudio();
-void numberCheck();
 void buzzingAndBlink();
 
 void loop(){
@@ -142,6 +146,14 @@ void rtcUpdate(){     // serial prints wont be needed afterwards. maybe discarde
   present_time = rtc.getTimeStr();    // present_time now contains string of time format. for example, present_time = "12:50:52"
   Serial.println(rtc.getTimeStr());
 }
+
+
+void smokeCheck(){
+
+
+  
+}
+
 
 void timeCheck(){
   //checking if it is 7 A.M.

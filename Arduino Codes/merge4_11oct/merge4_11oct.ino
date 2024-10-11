@@ -20,10 +20,6 @@
 #define RX 10                   // Connect to the TX pin of the HC-12
 #define TX 11                   // Connect to the RX pin of the HC-12
 
-#define SD_ChipSelectPin 53     // example uses hardware SS pin 53 on Mega2560, MOSI 51, MISO 50, CLK 52
-//#define SD_ChipSelectPin 10   // using digital pin 10 on arduino uno 328, can use other pins
-#define SD_SpeakerPin 46        // previously was 9 for uno
-
 #define call_owner1  "ATD+ +8801857715545;"            // put owner phone number
 #define sms_owner1 "AT+CMGS=\"+8801857715545\"\r"
 #define call_owner2  "ATD+ +8801765014450;"            // put owner phone number
@@ -32,28 +28,35 @@
 #define MOSFET 49
 #define buzzer 48
 
-#define digitalPin_mq2 47
+#define PIRpin 43                 // PIR motion sensor pin
 
-//int digitalPin_mq2 = 7;     // Digital pin for MQ2 sensor
-int Analog_Input_mq2 = A0;  // Analog pin for MQ2 sensor (optional for analog readings)
+#define digitalPin_mq2 47         // mq2 smoke sensor pin 
+
+#define Sone 30                   // flame sensor pins
+#define Stwo 31
+#define Sthree 32
+#define Sfour 33
+#define Sfive 34
+
+int Analog_Input_mq2 = A0;        // Analog pin for MQ2 sensor (optional for analog readings)
 int lpg, co, smoke;
 
-MQ2 mq2(Analog_Input_mq2);  // MQ2 sensor on analog pin A0
+MQ2 mq2(Analog_Input_mq2);        // MQ2 sensor on analog pin A0
 
 
-DS3231  rtc(SDA, SCL);          // Init the DS3231 using the hardware interface
+DS3231  rtc(SDA, SCL);            // Init the DS3231 using the hardware interface
 bool sensorValidity = true;
 
-SoftwareSerial mySerial(RX, TX);// init software serial for hc12 communication
+SoftwareSerial mySerial(RX, TX);  // init software serial for hc12 communication
 SoftwareSerial SIM900A(12,13);    // init software serial for gsm900
 
-String present_time = "";       // RTC variables
+String present_time = "";         // RTC variables
 String incoming_call_string;
 
-int present_condition = 0;      // vibration variables
+int present_condition = 0;        // vibration variables
 int previous_condition = 0;
 
-TMRpcm tmrpcm;                  // needed for sd card module 
+TMRpcm tmrpcm;                    // needed for sd card module 
 
 int toggle = 1;
 bool ifCallMade = false;
@@ -71,21 +74,32 @@ void setup(){
   Serial.println("Initializing...");
   delay(1000);
 
-  SIM900A.println("AT"); //Handshaking with SIM900
+  SIM900A.println("AT");        //Handshaking with SIM900
   updateSerial();
-  SIM900A.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
+  SIM900A.println("AT+CSQ");    //Signal quality test, value range is 0-31 , 31 is the best
   updateSerial();
-  SIM900A.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
+  SIM900A.println("AT+CCID");   //Read SIM information to confirm whether the SIM is plugged
   updateSerial();
-  SIM900A.println("AT+CREG?"); //Check whether it has registered in the network
+  SIM900A.println("AT+CREG?");  //Check whether it has registered in the network
   updateSerial();
   SIM900A.println("AT+CLIP=1");
   updateSerial();
 
   //smoke setup
   pinMode(digitalPin_mq2, INPUT); // Set the digital pin as input
-  mq2.begin();          // Initialize the MQ2 sensor
-  
+  mq2.begin();                  // Initialize the MQ2 sensor
+
+  //motion setup
+  pinMode(PIRpin, INPUT);
+  //Serial.begin(9600);           // Start the Serial Monitor
+
+
+  //flame setup
+  pinMode(Sone, INPUT);
+  pinMode(Stwo, INPUT);
+  pinMode(Sthree, INPUT);
+  pinMode(Sfour, INPUT);
+  pinMode(Sfive, INPUT);
   
   //laser setup
   pinMode(DETECT, INPUT);       //define detect input pin
@@ -96,15 +110,12 @@ void setup(){
   
   // The following lines can be uncommented to set the date and time
   rtc.setDOW(TUESDAY);          // Set Day-of-Week to SUNDAY
-  rtc.setTime(5, 57, 0);       // Set the time to 12:00:00 (24hr format)
+  rtc.setTime(5, 57, 0);        // Set the time to 12:00:00 (24hr format)
   rtc.setDate(11, 3, 2022);     // Set the date to January 1st, 2014
 
   //vibration setup
   pinMode(vibration_Sensor, INPUT);
   pinMode(LED, OUTPUT);
-
-  //sd card setup
-  tmrpcm.speakerPin = SD_SpeakerPin;   //5,6,11 or 46 on Mega, 9 on Uno, Nano, etc
 
 }
 
@@ -114,7 +125,8 @@ void vibrationCheck();
 void laserCheck();
 void numberCheck();
 void smokeCheck();
-
+void motionCheck();
+void flameCheck();
 
 void rtcUpdate();
 void hc12_Signal();
@@ -128,6 +140,9 @@ void loop(){
   //laserCheck();     // checking if laser interference is interfered
 
   smokeCheck();       // delay = 0.5 sec
+  motionCheck();
+  flameCheck();
+  
   numberCheck();      // check if owner called to turn sensor off/on
 
   //  if (SIM900A.available()>0)
@@ -150,6 +165,47 @@ void rtcUpdate(){     // serial prints wont be needed afterwards. maybe discarde
   Serial.println(rtc.getTimeStr());
 }
 
+
+void flameCheck(){
+  bool value1 = digitalRead(Sone);
+  bool value2 = digitalRead(Stwo);
+  bool value3 = digitalRead(Sthree);
+  bool value4 = digitalRead(Sfour);
+  bool value5 = digitalRead(Sfive);
+
+  //Serial.println(value5);
+  if (value1 == 1 || value2 == 1 || value3 == 1 || value4 ==1 || value5 == 1) {
+
+    Serial.println("Flame detected");
+
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(LED, HIGH);
+    mySerial.write("FLAME DETECTED");         // sending alert signal to receiving hc12
+    
+  } else {
+    digitalWrite(buzzer, LOW);
+    digitalWrite(LED, LOW);
+  }
+  
+}
+
+void motionCheck(){
+  int sensorValue = digitalRead(PIRpin);
+
+  if (sensorValue == HIGH) {
+    Serial.println("Motion detected!");
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(LED, HIGH);
+    mySerial.write("MOTION DETECTED");         // sending alert signal to receiving hc12
+
+  } else {
+    digitalWrite(buzzer, LOW);
+    digitalWrite(LED, LOW);
+    Serial.println("No motion.");
+  }
+
+  //delay(100);  // Check every 100ms
+}
 
 void smokeCheck(){
   int gasDetected = digitalRead(digitalPin_mq2);
@@ -182,7 +238,7 @@ void smokeCheck(){
     Serial.println("No gas detected.");
   }
   
-  delay(500);  // Delay for 1 second
+  delay(100);  // Delay for 1 second
 
 }
 
@@ -207,13 +263,11 @@ void timeCheck(){
 
 //Function to check if vibration is detected
 void vibrationCheck(){
-  //if(sensorValidity)
   {                               // only functional when sensorValidity == true
     //vibration input
     previous_condition = present_condition;
     present_condition = digitalRead(A5);            // Reading digital data from the A5 Pin of the Arduino.
     if (previous_condition != present_condition) {
-      //buzzingAndBlink();
       digitalWrite(buzzer, HIGH);
       digitalWrite(LED, HIGH);
       mySerial.write("VIBRATION DETECTED");         // sending alert signal to receiving hc12
@@ -226,7 +280,7 @@ void vibrationCheck(){
     }
   }
 
-  delay(1000);
+  delay(100);
 }
 
 // Function to check if laser detection is interfered
@@ -307,14 +361,7 @@ void Makecall(int num){
   Serial.println ("Calling owner");
   delay (500);  
   SIM900A.println(call_owner1);
-  Serial.write ("call made  to owner 2");
-  //delay(20000);
-  
- // {
-  //  SIM900A.println(call_owner1);
-  //  Serial.write ("call made to owner 1");
-//}
-  //delay(5000);
+  Serial.write ("call made  to owner 1");
   
   delay(4000);
   //Serial.write ("hanging up call");
