@@ -14,31 +14,41 @@ void setup() {
 
 void loop() {
   // Read the digital pin to check for gas detection threshold
-  int gasDetected = digitalRead(digitalPin);
+  //int gasDetected = digitalRead(digitalPin);
+    int gasDetected = analogRead(1);
+
 
     // Optionally, you can still read analog values for LPG, CO, and smoke
-  lpg = mq2.readLPG();    // Read LPG concentration
-  co = mq2.readCO();      // Read CO concentration
-  smoke = mq2.readSmoke();// Read Smoke concentration
+//  lpg = mq2.readLPG();    // Read LPG concentration
+//  co = mq2.readCO();      // Read CO concentration
+//  smoke = mq2.readSmoke();// Read Smoke concentration
 
-  if (gasDetected == HIGH) {
+//  if (gasDetected == HIGH) {
+//    Serial.println("Gas detected! Checking levels...");
+//    
+//
+//
+//
+//  } else {
+//    Serial.println("No gas detected.");
+//  }
+
+if (gasDetected == HIGH) {
     Serial.println("Gas detected! Checking levels...");
     
-
-
-
   } else {
     Serial.println("No gas detected.");
   }
 
+
     // Print the sensor readings in the Serial Monitor
   Serial.print("LPG: ");
-  Serial.print(lpg);
+  Serial.print(gasDetected);
   Serial.print(" ppm | CO: ");
   Serial.print(co);
   Serial.print(" ppm | Smoke: ");
   Serial.print((smoke * 100) / 1000000);
   Serial.println(" %");
 
-  delay(200);  // Delay for 1 second
+  delay(2000);  // Delay for 1 second
 }

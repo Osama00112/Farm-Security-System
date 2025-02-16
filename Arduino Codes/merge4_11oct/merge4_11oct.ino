@@ -28,9 +28,9 @@
 #define MOSFET 49
 #define buzzer 48
 
-#define PIRpin 43                 // PIR motion sensor pin
+#define PIRpin 4                 // PIR motion sensor pin
 
-#define digitalPin_mq2 47         // mq2 smoke sensor pin 
+#define digitalPin_mq2 51         // mq2 smoke sensor pin 
 
 #define Sone 30                   // flame sensor pins
 #define Stwo 31
@@ -38,10 +38,12 @@
 #define Sfour 33
 #define Sfive 34
 
-int Analog_Input_mq2 = A0;        // Analog pin for MQ2 sensor (optional for analog readings)
-int lpg, co, smoke;
+int Analog_Input_mq2 = A1;        // Analog pin for MQ2 sensor (optional for analog readings)
+int analog_mq2_pin = 1;
+int lpg, co;
+float smoke;
 
-MQ2 mq2(Analog_Input_mq2);        // MQ2 sensor on analog pin A0
+//MQ2 mq2(Analog_Input_mq2);        // MQ2 sensor on analog pin A0
 
 
 DS3231  rtc(SDA, SCL);            // Init the DS3231 using the hardware interface
@@ -87,7 +89,7 @@ void setup(){
 
   //smoke setup
   pinMode(digitalPin_mq2, INPUT); // Set the digital pin as input
-  mq2.begin();                  // Initialize the MQ2 sensor
+  //mq2.begin();                  // Initialize the MQ2 sensor
 
   //motion setup
   pinMode(PIRpin, INPUT);
@@ -134,14 +136,18 @@ void playAudio();
 void buzzingAndBlink();
 
 void loop(){
-  //rtcUpdate();      // update from RTC
-  timeCheck();        // checking the time for sensor validity 
-  vibrationCheck();   // checking if vibration detected, delay = 7 sec
-  //laserCheck();     // checking if laser interference is interfered
 
-  smokeCheck();       // delay = 0.5 sec
-  motionCheck();
-  flameCheck();
+  if (toggle == 1)
+  {
+    //rtcUpdate();      // update from RTC
+    //timeCheck();        // checking the time for sensor validity 
+    vibrationCheck();   // checking if vibration detected, delay = 7 sec
+    laserCheck();     // checking if laser interference is interfered
+
+    smokeCheck();       // delay = 0.5 sec
+    motionCheck();
+    //flameCheck();
+  }
   
   numberCheck();      // check if owner called to turn sensor off/on
 
@@ -181,6 +187,8 @@ void flameCheck(){
     digitalWrite(buzzer, HIGH);
     digitalWrite(LED, HIGH);
     mySerial.write("FLAME DETECTED");         // sending alert signal to receiving hc12
+    //Makecall(1);                                   // calling owner to alert delay =hyasfdhujdshfiuahfuoashdfioasdhfioasdhfiadsjhfaidsj
+    
     
   } else {
     digitalWrite(buzzer, LOW);
@@ -197,7 +205,8 @@ void motionCheck(){
     digitalWrite(buzzer, HIGH);
     digitalWrite(LED, HIGH);
     mySerial.write("MOTION DETECTED");         // sending alert signal to receiving hc12
-
+//    Makecall(1);                                   // calling owner to alert delay =hyasfdhujdshfiuahfuoashdfioasdhfioasdhfiadsjhfaidsj
+    
   } else {
     digitalWrite(buzzer, LOW);
     digitalWrite(LED, LOW);
@@ -208,35 +217,52 @@ void motionCheck(){
 }
 
 void smokeCheck(){
-  int gasDetected = digitalRead(digitalPin_mq2);
+  //int gasDetected = digitalRead(digitalPin_mq2);
+  int gasDetected = analogRead(analog_mq2_pin);
 
-  lpg = mq2.readLPG();    // Read LPG concentration
-  co = mq2.readCO();      // Read CO concentration
-  smoke = mq2.readSmoke();// Read Smoke concentration
+  //lpg = mq2.readLPG();    // Read LPG concentration
+  //co = mq2.readCO();      // Read CO concentration
+  //smoke = mq2.readSmoke();// Read Smoke concentration
 
-  if (gasDetected == HIGH) {
+//  if (gasDetected == HIGH) {
+//    Serial.println("Gas detected! Checking levels...");
+//    
+//    // Print the sensor readings in the Serial Monitor
+//    Serial.print("LPG: ");
+//    Serial.print(lpg);
+//    Serial.print(" ppm | CO: ");
+//    Serial.print(co);
+//    Serial.print(" ppm | Smoke: ");
+//    Serial.print((smoke * 100) / 1000000);
+//    Serial.println(" %");
+//
+//
+//    digitalWrite(buzzer, HIGH);
+//    digitalWrite(LED, HIGH);
+//    mySerial.write("SMOKE DETECTED");         // sending alert signal to receiving hc12
+//
+//    
+//  } else {
+//    digitalWrite(buzzer, LOW);
+//    digitalWrite(LED, LOW);
+//    Serial.println("No gas detected.");
+//  }
+
+  if (gasDetected > 715){
     Serial.println("Gas detected! Checking levels...");
-    
-    // Print the sensor readings in the Serial Monitor
-    Serial.print("LPG: ");
-    Serial.print(lpg);
-    Serial.print(" ppm | CO: ");
-    Serial.print(co);
-    Serial.print(" ppm | Smoke: ");
-    Serial.print((smoke * 100) / 1000000);
-    Serial.println(" %");
-
-
     digitalWrite(buzzer, HIGH);
     digitalWrite(LED, HIGH);
     mySerial.write("SMOKE DETECTED");         // sending alert signal to receiving hc12
+    Makecall(1);                                   // calling owner to alert delay =hyasfdhujdshfiuahfuoashdfioasdhfioasdhfiadsjhfaidsj
 
-    
-  } else {
-    digitalWrite(buzzer, LOW);
+  }else{
+        digitalWrite(buzzer, LOW);
     digitalWrite(LED, LOW);
     Serial.println("No gas detected.");
   }
+
+    Serial.print("Smoke level: ");
+    Serial.println(gasDetected);
   
   delay(100);  // Delay for 1 second
 
@@ -287,7 +313,7 @@ void vibrationCheck(){
 void laserCheck(){
   int detected = digitalRead(DETECT);       // read Laser sensor 
   if(detected == HIGH){
-    Serial.println("Detected!");
+    Serial.println("Laser OK");
     digitalWrite(buzzer, LOW);
     digitalWrite(LED, LOW);
   }else{
@@ -309,7 +335,7 @@ void numberCheck(){
     Serial.println("available");
   }
 
-  if(ifCallMade == false && (incoming_call_string.indexOf("+88018577155") > -1  ) ){    // Check if the string we read had any substring containing the owner number
+  if(ifCallMade == false && (incoming_call_string.indexOf("+88018577155") > -1 || incoming_call_string.indexOf("+8801765014450") > -1  ) ){    // Check if the string we read had any substring containing the owner number
     Serial.println("FOUNDDDD");                                                                                                               // Makecall() func can also detect owner, we want to avoid that
     if(toggle == 1){
       digitalWrite(MOSFET, LOW);
@@ -319,7 +345,7 @@ void numberCheck(){
     }
     toggle = toggle * (-1);
     incoming_call_string = "";
-    delay(3000);
+    delay(8000);
   }
   else if(ifCallMade == true){
     Serial.println("GSM called owner at some point");
